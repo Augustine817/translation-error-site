@@ -45,7 +45,7 @@
   <script>
     let allData = [];
 
-    fetch('errorlist.json')  // 上传时请将 json 文件重命名为 errorlist.json
+    fetch('errorlist.json')
       .then(res => res.json())
       .then(data => {
         allData = data;
@@ -62,19 +62,18 @@
         div.className = 'entry';
         div.innerHTML = `
           <div class="summary" onclick="toggle(${i})">
-            ${entry["翻译方向"]} · ${entry["文本类型"]} · ${entry["错误标签"]}  
-            <br>原文：${entry["原文"].slice(0, 30)}...
+            原文：${safe(entry["原文"]).slice(0, 40)}...
           </div>
           <div class="details" id="d${i}">
-            <div><span class="label">原文：</span>${entry["原文"]}</div>
-            <div><span class="label">我的翻译：</span>${entry["我的翻译"]}</div>
-            <div><span class="label">修改建议：</span>${entry["修改建议"]}</div>
-            <div><span class="label">错因分析：</span>${entry["错因分析"]}</div>
-            <div><span class="label">表达积累：</span>${entry["表达积累"] || '（暂无）'}</div>
-            <div><span class="label">错误标签：</span>${wrapTags(entry["错误标签"])}</div>
-            <div><span class="label">文本类型：</span>${entry["文本类型"]}</div>
-            <div><span class="label">翻译方向：</span>${entry["翻译方向"]}</div>
-            <div><span class="label">日期：</span>${entry["日期"] || '（未标注）'}</div>
+            ${renderField("原文", entry["原文"])}
+            ${renderField("我的翻译", entry["我的翻译"])}
+            ${renderField("修改建议", entry["修改建议"])}
+            ${renderField("错因分析", entry["错因分析"])}
+            ${renderField("表达积累", entry["表达积累"])}
+            ${renderTags("错误标签", entry["错误标签"])}
+            ${renderField("文本类型", entry["文本类型"])}
+            ${renderField("翻译方向", entry["翻译方向"])}
+            ${renderField("日期", entry["日期"])}
           </div>
         `;
         container.appendChild(div);
@@ -86,22 +85,30 @@
       el.style.display = el.style.display === 'block' ? 'none' : 'block';
     }
 
-    function wrapTags(text) {
-      if (!text) return '';
-      return text.split(',').map(t =>
-        `<span class="tag">${t.trim()}</span>`
+    function renderField(label, value) {
+      if (!value) return '';
+      return `<div><span class="label">${label}：</span>${safe(value)}</div>`;
+    }
+
+    function renderTags(label, value) {
+      if (!value) return '';
+      const tags = value.split(',').map(t =>
+        `<span class="tag">${safe(t.trim())}</span>`
       ).join('');
+      return `<div><span class="label">${label}：</span>${tags}</div>`;
     }
 
     function showRandomEntry() {
       if (!allData.length) return;
       const r = allData[Math.floor(Math.random() * allData.length)];
       document.getElementById('randomEntry').innerHTML = `
-        <div class="summary">每日一句 · ${r["翻译方向"]} · ${r["文本类型"]}</div>
+        <div class="summary">每日一句：${safe(r["原文"]).slice(0, 40)}...</div>
         <div class="details" style="display:block;">
-          <div><span class="label">原文：</span>${r["原文"]}</div>
-          <div><span class="label">我的翻译：</span>${r["我的翻译"]}</div>
-          <div><span class="label">修改建议：</span>${r["修改建议"]}</div>
+          ${renderField("原文", r["原文"])}
+          ${renderField("我的翻译", r["我的翻译"])}
+          ${renderField("修改建议", r["修改建议"])}
+          ${renderField("错因分析", r["错因分析"])}
+          ${renderField("表达积累", r["表达积累"])}
         </div>`;
     }
 
@@ -142,6 +149,10 @@
           scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
         }
       });
+    }
+
+    function safe(text) {
+      return text ? String(text).replace(/</g, "&lt;").replace(/>/g, "&gt;") : '（暂无）';
     }
   </script>
 </body>
